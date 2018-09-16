@@ -13,10 +13,17 @@ main() {
 
     diff "$dir/expected.txt" <(sed $args -f "$dir/../junit4-to-5.sed" "$dir/test.txt")
 
-    mvn -f "$dir/junit4.pom.xml" clean test
+    tests4=$(mvn_test "$dir/junit4.pom.xml")
     find "$dir/src" -name \*.java -exec sed $args -i.bak -f "$dir/../junit4-to-5.sed" {} \;
     find "$dir/src" -name \*.java.bak -delete
-    mvn -f "$dir/junit5.pom.xml" clean test
+    tests5=$(mvn_test "$dir/junit5.pom.xml")
+    diff <(echo "$tests4") <(echo "$tests5")
+}
+
+mvn_test() {
+    local file="$1"
+    mvn -B -f "$file" clean test \
+        | sed -n '/Results:/,/Tests run:/p'
 }
 
 less_than_4_2() {
